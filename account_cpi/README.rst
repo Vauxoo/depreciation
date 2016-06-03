@@ -1,12 +1,9 @@
-===================================
-ACCOUNTING TOOLS TESTING REPOSITORY
-===================================
-
+================================
 CONSUMER PRICE INDEX TEST MODULE
 ================================
 
 The Following Module was designed to add a Fiscal Period Dependent Index to 
 track the Effects of Inflation on Long-term Items.
 
-It's very likely this Module and its functions will be absorbed by a More 
-General Module.
+To do: Emulate the Date Ranges of Multiples Fiscal Periods in future branches,
+as the latter fields are absent in 9.0 or Newer versions of Odoo.
