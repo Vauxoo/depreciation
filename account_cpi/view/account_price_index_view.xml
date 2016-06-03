@@ -1,0 +1,25 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<openerp>
+    <data>
+        <record model="ir.ui.view" id="priceindex_tree_view">
+            <field name="name">price.index.tree.view</field>
+            <field name="model">account.price.index</field>
+            <field name="arch" type="xml">
+                <tree string="Consumer Price Index" editable="bottom">
+                    <field name="period_id"/>
+                    <field name="index_value"/>
+                </tree>
+            </field>
+        </record>
+
+        <record model="ir.actions.act_window" id="priceindex_list_action">
+            <field name="name">Consumer Price Indexes</field>
+            <field name="res_model">account.price.index</field>
+            <field name="view_type">form</field>
+            <field name="view_mode">tree</field>
+        </record>
+
+        <menuitem id="menu_action_account_cpi" action="priceindex_list_action"
+                  parent="account.next_id_23"/>
+    </data>
+</openerp>
