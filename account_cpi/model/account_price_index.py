@@ -8,12 +8,25 @@ class PriceIndex(models.Model):
 
     period_id = fields.Many2one(
         'account.period',
-        ondelete='cascade',
-        string="Period",
-        required=True,
+        ondelete = 'cascade',
+        string = "Period",
+        help = "Relation to a Valid Stored Period. Unique.",
+        required = True,
+
+    )
+    start_date = fields.Date(
+        string = "Start Date of Period",
+        readonly = True,
+        related = "period_id.date_start"
+    )
+    end_date = fields.Date(
+        string = "End Date of Period",
+        readonly = True,
+        related = "period_id.date_stop"
     )
     index_value = fields.Float(
-        string="Price Index"
+        string = "Price Index",
+        help = "Consumer Price Index for a Specific Fiscal Period.",
     )
     _sql_constraints = [
         ('period_unique',
