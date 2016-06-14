@@ -1,9 +1,9 @@
 # -*- coding: utf-8 -*-
 # import time
-# from datetime import datetime
+from datetime import datetime
 # from dateutil.relativedelta import relativedelta
 
-from openerp import fields, models
+from openerp import api, fields, models
 
 
 class AdjustableAsset(models.Model):
@@ -14,7 +14,22 @@ class AdjustableAsset(models.Model):
         'asset_id', string="Initial Adjustment"
     )
 
-
+    @api.depends('purchase_date')
+    def _adjust_initial_values(self):
+#        for r in self:
+        purchase_period = datetime.strptime(
+            self.purchase_date, '%Y-%m-%d'
+        ).replace(day=1)
+        cpi_list = self.env["account.cpi"].search(
+            [
+               ("start_date", ">=", purchase_period),
+            ],
+            order="start_date asc",
+        )
+        first_idx = cpi_list[0].index_value
+        adj_factor = [
+            cpi.index_value/first_idx for cpi in cpi_list
+        ]
 
 class InitialAdjustmentLine(models.Model):
     _name = 'account.asset.adjust.initial'
