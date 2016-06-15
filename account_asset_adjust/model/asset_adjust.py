@@ -17,6 +17,7 @@ class AdjustableAsset(models.Model):
     @api.depends('purchase_date')
     def _adjust_initial_values(self):
 #        for r in self:
+        self.ensure_one()
         purchase_period = datetime.strptime(
             self.purchase_date, '%Y-%m-%d'
         ).replace(day=1)
@@ -27,9 +28,13 @@ class AdjustableAsset(models.Model):
             order="start_date asc",
         )
         first_idx = cpi_list[0].index_value
-        adj_factor = [
-            cpi.index_value/first_idx for cpi in cpi_list
-        ]
+        for cpi in cpi_list:
+            adj_factor = cpi.index_value/first_idx
+            self.env['account.asset.adjust.initial'].create({
+                asset_id: self.id,
+                period_id: cpi.period_id,
+                adjust_factor: adj_factor,
+            })
 
 class InitialAdjustmentLine(models.Model):
     _name = 'account.asset.adjust.initial'
