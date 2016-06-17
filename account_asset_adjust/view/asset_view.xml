@@ -6,6 +6,19 @@
             <field name="model">account.asset.asset</field>
             <field name="inherit_id" ref="account_asset.view_account_asset_asset_form"/>
             <field name="arch" type="xml">
+            	<xpath 
+            	    expr="/field/form/sheet/notebook/page[@string='History']"
+            	    position="before">
+            	    <page string="Initial Adjustment">
+            	    	<field name="adjusted_initial_values_ids" mode="tree">
+            	    		<tree String="Initial Adjustment Lines">
+            	    			<field name="period_id" readonly="1"/>
+            	    			<field name="adjust_date" readonly="1"/>
+            	    			<field name="adjust_factor" readonly="1"/>
+            	    		</tree>
+            	    	</field>
+            	    </page>
+            	</xpath>
             </field>
         </record>
     </data>
