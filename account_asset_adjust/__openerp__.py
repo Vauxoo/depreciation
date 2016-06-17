@@ -12,13 +12,13 @@
     'version': '0.1',
 
     # any module necessary for this one to work correctly
-    'depends': ['base', 'account', 'account_asset'],
+    'depends': ['base', 'account', 'account_asset','account_cpi'],
 
     # always loaded
     'data': [
         # 'security/security.xml',
         # 'security/ir.model.access.csv',
-        # 'view/account_asset_adjust.xml',
+        'view/asset_view.xml',
         # 'templates.xml',
     ],
     # only loaded in demonstration mode

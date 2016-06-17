@@ -16,11 +16,13 @@ class PriceIndex(models.Model):
     )
     start_date = fields.Date(
         string = "Start Date of Period",
+        store = True,
         readonly = True,
         related = "period_id.date_start"
     )
     end_date = fields.Date(
         string = "End Date of Period",
+        store = True,
         readonly = True,
         related = "period_id.date_stop"
     )
