@@ -56,6 +56,10 @@
                                 <field name="adjust_date" readonly="1"/>
                                 <field name="adjust_factor" readonly="1"/>
                                 <field name="adjust_value" readonly="1"/>
+                                <field name="adjust_depr" readonly="1"/>
+                                <field name="value_init_adj" readonly="1"/>
+                                <field name="depr_init_adj" readonly="1"/>
+                                <field name="init_adjust" readonly="1"/>
                             </tree>
                         </field>
                     </page>

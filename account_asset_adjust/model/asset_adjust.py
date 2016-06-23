@@ -32,6 +32,22 @@ class InitialAdjustmentLine(models.Model):
         string = "Adjusted Value",
         digits = dp.get_precision('Account'),
     )
+    adjust_depr = fields.Float(
+        string = "Adjusted Accumulated Depreciation",
+        digits = dp.get_precision('Account'),
+    )
+    value_init_adj = fields.Float(
+        string = "Value Initial Adjustment",
+        digits = dp.get_precision('Account'),
+    )
+    depr_init_adj = fields.Float(
+        string = "Depreciation Initial Adjustment",
+        digits = dp.get_precision('Account'),
+    )
+    init_adjust = fields.Float(
+        string = "Gross Initial Adjustment",
+        digits = dp.get_precision('Account'),
+    )
 
     _sql_constraints = [
         (
@@ -171,10 +187,49 @@ class AdjustableAsset(models.Model):
             ],
             order="start_date asc",
         )
+        depr = self.depreciation_line_ids.sorted(
+            key=lambda r: r.depreciation_date
+        )
+        if depr:
+            prev_depr_date = depr[0].depreciation_date
+            depr_length = len(depr)
+            if (1 < depr_length):
+                next_depr_date = depr[1].depreciation_date
+            d_ct = 0
         first_idx = cpi_list[0].index_value
         for cpi in cpi_list:
+            adj_date = cpi.start_date
             adj_factor = cpi.index_value / first_idx
             adj_value = adj_factor * self.purchase_value
+            if depr:
+                if d_ct < depr_length:
+                    if (
+                        adj_date < next_depr_date
+                    ):
+                        chk = d_ct
+                    else:
+                        while (
+                            (
+                                adj_date >= next_depr_date
+                            ) and (
+                                d_ct < depr_length
+                            )
+                        ):
+                            prev_depr_date = next_depr_date
+                            d_ct += 1
+                            if (d_ct < depr_length):
+                                next_depr_date = depr[d_ct].depreciation_date
+                        chk = d_ct - 1
+                    adj_depr = depr[chk].depreciated_value
+                else:
+                    adj_depr = self.purchase_value
+            else:
+                adj_depr = 0.0
+            diff_depr = adj_depr
+            adj_depr *= adj_factor
+            diff_value = adj_value - self.purchase_value
+            diff_depr = adj_depr - diff_depr
+            init_adj = diff_value - diff_depr
             to_update = self.env['account.asset.adjust.initial'].search(
                 [
                     ("asset_id", "=", self.id),
@@ -185,6 +240,10 @@ class AdjustableAsset(models.Model):
                 to_update[0].write({
                     "adjust_factor": adj_factor,
                     "adjust_value": adj_value,
+                    "adjust_depr": adj_depr,
+                    "value_init_adj": diff_value,
+                    "depr_init_adj": diff_depr,
+                    "init_adjust": init_adj,
                 })
             else:
                 self.env['account.asset.adjust.initial'].create({
@@ -192,5 +251,9 @@ class AdjustableAsset(models.Model):
                     "period_id": cpi.period_id.id,
                     "adjust_factor": adj_factor,
                     "adjust_value": adj_value,
+                    "adjust_depr": adj_depr,
+                    "value_init_adj": diff_value,
+                    "depr_init_adj": diff_depr,
+                    "init_adjust": init_adj,
                 })
         return True
