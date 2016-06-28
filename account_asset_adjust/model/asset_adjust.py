@@ -117,14 +117,8 @@ class AdjustableAsset(models.Model):
                     )
                 else:
                     month = purchase_date.month
-                    common_period = [2,3,4,6]
                     if (asset.method_period % 12 == 0):
                         month = 1
-                    elif (asset.method_period in common_period):
-                        month -= (
-                            (purchase_date.month - 1)
-                            % asset.method_period
-                        )
                     depreciation_date = datetime(
                         purchase_date.year, month, 1
                     )
@@ -219,10 +213,24 @@ class AdjustableAsset(models.Model):
                             d_ct += 1
                             if (d_ct < depr_length):
                                 next_depr_date = depr[d_ct].depreciation_date
+                            else:
+                                next_depr_date = (
+                                        datetime.strptime(
+                                            next_depr_date, '%Y-%m-%d'
+                                        )
+                                        + relativedelta(
+                                            months=+self.method_period
+                                        )
+                                    ).strftime(
+                                        '%Y-%m-%d'
+                                    )
                         chk = d_ct - 1
                     adj_depr = depr[chk].depreciated_value
                 else:
-                    adj_depr = self.purchase_value
+                    if (adj_date >= next_depr_date):
+                        adj_depr = self.purchase_value
+                    else:
+                        adj_depr = depr[depr_length-1].depreciated_value
             else:
                 adj_depr = 0.0
             diff_depr = adj_depr
