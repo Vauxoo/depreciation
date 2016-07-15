@@ -50,7 +50,7 @@
                     position="before">
                     <page string="Initial Adjustment">
                         <button name="adjust_initial_values" type="object" string="Compute" colspan="2" />
-                        <field name="adjusted_initial_values_ids" mode="tree">
+                        <field name="adjusted_initial_values_ids" mode="tree" readonly="1">
                             <tree String="Initial Adjustment Lines">
                                 <field name="period_id" readonly="1"/>
                                 <field name="adjust_date" readonly="1"/>
