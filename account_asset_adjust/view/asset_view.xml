@@ -63,6 +63,18 @@
                             </tree>
                         </field>
                     </page>
+                    <page string="Regular Adjustment">
+                        <button name="adjust_regular_values" type="object" string="Compute" colspan="2" />
+                        <field name="regular_adjust_values_ids" mode="tree" readonly="1">
+                            <tree String="Regular Adjustment Lines">
+                                <field name="period_id" readonly="1"/>
+                                <field name="adjust_date" readonly="1"/>
+                                <field name="value_reg_adj" readonly="1"/>
+                                <field name="depr_reg_adj" readonly="1"/>
+                                <field name="reg_adjust" readonly="1"/>
+                            </tree>
+                        </field>
+                    </page>
                 </xpath>
             </field>
         </record>

@@ -50,36 +50,46 @@ class InitialAdjustmentLine(models.Model):
     )
 
 
-# class RegularReadjustmentLine(models.Model):
-#     _name = 'account.asset.adjust.regular'
-#     _description = "Regular Readjustment for Assets"
+class RegularReadjustmentLine(models.Model):
+    _name = 'account.asset.adjust.regular'
+    _description = "Regular Readjustment for Assets"
 
-#     asset_id = fields.Many2one(
-#         'account.asset.asset', 'Asset',
-#         required=True, ondelete='cascade',
-#     )
-#     period_id = fields.Many2one(
-#         'account.period',ondelete = 'cascade',string = "Period",
-#         help = "Relation to a Valid Stored Period.",
-#         required = True,
-#     )
-#     adjust_date = fields.Date(
-#         string = "Adjustment Date",
-#         store = True,
-#         related = "period_id.date_start"
-#     )
-#     value_reg_adj = fields.Float(
-#         string = "Value Initial Adjustment",
-#         digits = dp.get_precision('Account'),
-#     )
-#     depr_reg_adj = fields.Float(
-#         string = "Depreciation Initial Adjustment",
-#         digits = dp.get_precision('Account'),
-#     )
-#     reg_adjust = fields.Float(
-#         string = "Gross Initial Adjustment",
-#         digits = dp.get_precision('Account'),
-#     )
+    asset_id = fields.Many2one(
+        'account.asset.asset', 'Asset',
+        required=True, ondelete='cascade',
+    )
+    period_id = fields.Many2one(
+        'account.period',ondelete = 'cascade',string = "Period",
+        help = "Relation to a Valid Stored Period.",
+        required = True,
+    )
+    adjust_date = fields.Date(
+        string = "Adjustment Date",
+        store = True,
+        related = "period_id.date_start"
+    )
+    value_reg_adj = fields.Float(
+        string = "Value Regular Adjustment",
+        help = (
+            "The Difference between a Period's Initial Adjustment "
+            "to the Gross Value and the Adjustment done on the "
+            "Previous Period."
+        ),
+        digits = dp.get_precision('Account'),
+    )
+    depr_reg_adj = fields.Float(
+        string = "Depreciation Regular Adjustment",
+        help = (
+            "The Difference between a Period's Initial Adjustment "
+            "to the Depreciation and the Adjustment done on the "
+            "Previous Period."
+        ),
+        digits = dp.get_precision('Account'),
+    )
+    reg_adjust = fields.Float(
+        string = "Gross Regular Adjustment",
+        digits = dp.get_precision('Account'),
+    )
 
 
 class AdjustableAsset(models.Model):
@@ -90,11 +100,11 @@ class AdjustableAsset(models.Model):
         'asset_id', string="Initial Adjustment"
     )
     
-    # regular_readjust_values_ids = fields.One2many(
-    #     'account.asset.adjust.regular',
-    #     'asset_id', string="Regular Adjustment"
-    # )
-    # 
+    regular_adjust_values_ids = fields.One2many(
+        'account.asset.adjust.regular',
+        'asset_id', string="Regular Adjustment"
+    )
+    
     @api.v7
     def compute_depreciation_board_ext(self, cr, uid, ids, context=None):
         depreciation_lin_obj = self.pool.get('account.asset.depreciation.line')
@@ -373,4 +383,47 @@ class AdjustableAsset(models.Model):
         ]
         if clear_lines:
             self.write({'adjusted_initial_values_ids': clear_lines})
+        return True
+        
+    @api.multi
+    def adjust_regular_values(self):
+        self.ensure_one()
+        initial = self.adjusted_initial_values_ids.sorted(
+            key=lambda r: r.adjust_date
+        )
+        if initial:
+            regular = self.regular_adjust_values_ids.sorted(
+                key=lambda r: r.adjust_date
+            )
+            reg_length = len(regular)
+            for idx, init in enumerate(initial):
+                reg_value = init.value_init_adj
+                reg_depr = init.depr_init_adj
+                reg_gross = init.init_adjust
+                
+                if 0 < idx:
+                    reg_value -= initial[idx-1].value_init_adj
+                    reg_depr -= initial[idx-1].depr_init_adj
+                    reg_gross -= initial[idx-1].init_adjust
+                if idx < reg_length:
+                    regular[idx].write({
+                        "period_id": init.period_id.id,
+                        "value_reg_adj": reg_value,
+                        "depr_reg_adj": reg_depr,
+                        "reg_adjust": reg_gross,
+                    })
+                else:
+                    self.env['account.asset.adjust.regular'].create({
+                        "asset_id": self.id,
+                        "period_id": init.period_id.id,
+                        "value_reg_adj": reg_value,
+                        "depr_reg_adj": reg_depr,
+                        "reg_adjust": reg_gross,
+                    })
+            clear_lines = [
+                (2,regular[idx].id,False)
+                for idx in range(len(initial),reg_length)
+            ]
+            if clear_lines:
+                self.write({'regular_adjust_values_ids': clear_lines})
         return True
